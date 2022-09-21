@@ -1,0 +1,61 @@
+package com.mosambee.util;
+
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+
+import com.mosambee.constant.Result;
+import com.mosambee.device.payload.request.DeviceDetailRequest;
+import com.mosambee.transaction.model.InitiateTransactionRequestFields;
+
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
+public class ValidatorUtil {
+	
+	private ValidatorUtil() {}
+		
+	public static String processValidateRequest(InitiateTransactionRequestFields txnData) {
+		StringBuilder validateFeilds = new StringBuilder();
+		
+		ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+		Validator validator = validatorFactory.getValidator();
+
+		Set<ConstraintViolation<InitiateTransactionRequestFields>> setValidateRequest = validator.validate(txnData);//HERE CHECK ALL FEILDS ARE VALIDATRE OR NOT?
+		log.debug("validated request with validation: {}", setValidateRequest.toString());
+
+		//IF REQUEST FEILDS ARE NOT VALID THEN ENTRY INTO IF BLOCK.
+		if (!setValidateRequest.isEmpty()) {
+			for (ConstraintViolation<InitiateTransactionRequestFields> constraintViolationValidateFeilds : setValidateRequest) {	
+				validateFeilds.append(constraintViolationValidateFeilds.getMessageTemplate());
+			}	
+			return validateFeilds.toString();
+		}
+		
+		return Result.SUCCESS;
+	}
+	
+	public static String processValidateRequest(DeviceDetailRequest deviceDetailRequest) {
+		StringBuilder buildErrorMessage = new StringBuilder();
+		
+		ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+		Validator validator = validatorFactory.getValidator();
+
+		Set<ConstraintViolation<DeviceDetailRequest>> setValidateRequest = validator.validate(deviceDetailRequest);
+		log.debug("validated request with validation: {}", setValidateRequest.toString());
+
+		if (!setValidateRequest.isEmpty()) {
+			for (ConstraintViolation<DeviceDetailRequest> constraintViolationValidateFeilds : setValidateRequest) {	
+				buildErrorMessage.append(constraintViolationValidateFeilds.getPropertyPath()).append(" : ");
+				buildErrorMessage.append(constraintViolationValidateFeilds.getMessageTemplate()); 
+			}	
+			
+			return buildErrorMessage.toString();
+		}
+		
+		return Result.SUCCESS;
+	}	
+}
